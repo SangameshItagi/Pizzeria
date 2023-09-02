@@ -11,7 +11,7 @@ right join `order` on `order`.OrderId=pizza.OrderId
 group by basepizza.PizzaSize,basepizza.PizzaCrust order by profit desc;
 
 CREATE VIEW ProfitByOrderType as
-SELECT  OrderType as CustomerType, DATE_FORMAT(OrderTime,'%Y %M') as OrderMonth, SUM(OrderPrice) as TotalOrderPrice, SUM(OrderCost) as TotalOrderCost, sum(OrderPrice-OrderCost) as profit from `order` group by CustomerType,OrderMonth
+SELECT  OrderType as CustomerType, DATE_FORMAT(OrderTime,'%Y %M') as OrderMonth, SUM(OrderPrice) as TotalOrderPrice, SUM(OrderCost) as TotalOrderCost, sum(OrderPrice-OrderCost) as Profit from `order` group by CustomerType,OrderMonth
 union select ' ','Grand Total' as OrderMonth, sum(OrderPrice) as TotalOrderPrice ,sum(OrderCost) as TotalOrderCost, sum(OrderPrice-OrderCost) as profit from `order`;
 
 SELECT * FROM ToppingPopularity;

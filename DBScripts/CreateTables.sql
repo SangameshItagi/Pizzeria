@@ -34,9 +34,8 @@ CREATE TABLE `topping` (
 CREATE TABLE `discount` (
   `DiscountId` int NOT NULL AUTO_INCREMENT,
   `DiscountName` varchar(20) NOT NULL,
-  `DiscountType` varchar(5) DEFAULT NULL,
+  `IsPercent` BOOLEAN DEFAULT false,
   `DiscountAmount` decimal(10,2) DEFAULT NULL,
-  `DiscountPercent` decimal(5,2) DEFAULT NULL,
   PRIMARY KEY (`DiscountId`)
 ) ;
 CREATE TABLE `order` (
@@ -46,6 +45,7 @@ CREATE TABLE `order` (
   `OrderTime` datetime NOT NULL,
   `OrderPrice` decimal(8,2) NOT NULL,
   `CustomerId` int DEFAULT NULL,
+  `IsComplete` BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (`OrderId`),
   KEY `CustomerId` (`CustomerId`),
   CONSTRAINT `order_fk_1` FOREIGN KEY (`CustomerId`) REFERENCES `customer` (`CustomerId`),
@@ -54,7 +54,7 @@ CREATE TABLE `order` (
 
 CREATE TABLE `dinein` (
   `OrderId` int NOT NULL,
-  `TableNumber` decimal(2,0) NOT NULL,
+  `TableNumber` decimal(5,0) NOT NULL,
   PRIMARY KEY (`OrderId`),
   CONSTRAINT `dinein_fk_1` FOREIGN KEY (`OrderId`) REFERENCES `order` (`OrderId`)
 ) ;
@@ -75,7 +75,7 @@ CREATE TABLE `pizza` (
   `OrderId` int NOT NULL,
   `PizzaSize` varchar(15) NOT NULL,
   `PizzaCrust` varchar(15) NOT NULL,
-  `PizzaState` varchar(15) NOT NULL,
+  `PizzaState` varchar(15) DEFAULT 'PROCESSED',
   `PizzaCost` decimal(8,2) NOT NULL,
   `PizzaPrice` decimal(8,2) NOT NULL,
   PRIMARY KEY (`PizzaId`),

@@ -1,3 +1,4 @@
+//Sangamesh Itagi and Gourish Pisal
 package cpsc4620;
 
 import java.io.BufferedReader;
@@ -5,8 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+
 import init.DBIniter;
 
 /*
@@ -108,29 +108,179 @@ public class Menu {
 		 * 
 		 * return to menu
 		 */
+
+		System.out.println("Is this order for an existing customer? Answer y/n:");
+		Integer custId;
+		double custPrice = 0;
+		double busPrice = 0;
+		String date = MenuHelper.getCurrentTime();
 		
+		//providing option for the user to choose whether it is a exisiting customer or a new customer 
+		if ("y".equalsIgnoreCase(reader.readLine())) {
+			System.out.println("Here's a list of current customer:");
+			viewCustomers();
+			System.out.println("which customer is this order for? Enter ID Number");
+			custId = Integer.parseInt(reader.readLine());
+		} else {
+			custId = EnterCustomer();
+		}
 		
+		//Once the customer is choosed providing option to choose the type of the order 
 		
+		System.out.println("Is this order for: \n1.) Dine-In\n2.) Pick-Up\n3.) Delivery\nEnter the number of your choice:");
+		
+		Integer orderTypeInt = Integer.parseInt(reader.readLine());
+		Order order = null;
+		switch(orderTypeInt) {
+			case 1:
+				System.out.println("Enter the table number  ");
+				Integer tablenum = Integer.parseInt(reader.readLine());
+				order = new DineinOrder(0, custId, date, custPrice, busPrice, 0, tablenum);
+			break;
+			case 2:
+				order = new PickupOrder(0, custId, date, custPrice, busPrice, 0, 0);
+			break;
+			case 3:
+				System.out.println("Enter the customer address ");
+				String customerAddress = reader.readLine();
+				order = new DeliveryOrder(0, custId, date, custPrice, busPrice, 0, customerAddress);
+			break;
+		}
+
+		System.out.println("Let's build a pizza!"); 
+		boolean addMorePizza = true;
+		while(addMorePizza) {
+			Pizza pizza = buildPizza();
+			busPrice += pizza.getBusPrice();
+			custPrice += pizza.getCustPrice();
+			order.addPizza(pizza);
+			System.out.println("Do you want to add another pizza : type y/n:");
+			if("y".equalsIgnoreCase(reader.readLine())) addMorePizza = true;
+			else addMorePizza = false;
+		}
+		
+		order.setCustPrice(custPrice);
+		order.setBusPrice(busPrice);
+		
+		helperOrderDiscount(order);
+		
+		DBNinja.addOrder(order);
+
 		System.out.println("Finished adding order...Returning to menu...");
 	}
 	
+	private static void helperOrderDiscount(Order order) {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+		System.out.println("Do you want to add order Discount : type y/n:");
+		try {
+			Boolean addorderDiscount = "y".equals(reader.readLine());
+			while (addorderDiscount) {
+
+				ArrayList<Discount> discounts = DBNinja.getDiscountList();
+				discounts.forEach(d->System.out.println(d.toString()));
+				
+				System.out.println("Please enter a discount id or -1 if you don't want to add a discount");
+				
+				Integer discountId = Integer.parseInt(reader.readLine());
+				
+				if (discountId == -1) break;
+				Discount pizzaDiscount = discounts.stream().filter(d->d.getDiscountID()==discountId).findAny().get();
+				order.addDiscount(pizzaDiscount);
+				
+				System.out.println("Do you want to add another discount : type y/n:");
+				if("y".equalsIgnoreCase(reader.readLine())) addorderDiscount = true;
+				else addorderDiscount = false;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void helperPizzaDiscount(Pizza pizza) {
+		//adding discount
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		try{
+		System.out.println("Do you want to add pizza Discount : type y/n:");
+		Boolean addDiscount = "y".equalsIgnoreCase(reader.readLine());
+		while (addDiscount) {
+	
+			ArrayList<Discount> discounts = DBNinja.getDiscountList();
+			
+			for (Discount discount : discounts) {
+				System.out.println(discount.toString());
+			}
+			
+			System.out.println("Please enter a discount id or -1 if you don't want to add a discount");
+			
+			Integer discountId = Integer.parseInt(reader.readLine());
+			
+			if (discountId==-1) break;
+			Discount pizzaDiscount = discounts.stream().filter(d->d.getDiscountID()==discountId).findAny().get();
+			pizza.addDiscounts(pizzaDiscount);
+			
+			System.out.println("Do you want to add another discount : type y/n:");
+			if("y".equalsIgnoreCase(reader.readLine())) addDiscount = true;
+			else addDiscount = false;
+
+		}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void helperToppings(Pizza pizza) {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
+		Boolean addMoreTopping = true;
+			
+		while(addMoreTopping) {
+			try {		
+				ArrayList<Topping> toppings = ViewInventoryLevels();
+				
+				System.out.println("Please enter a topping id from the above list if toppings is not required enter -1:");
+				
+				Integer toppingId = Integer.parseInt(reader.readLine());
+				
+				if (toppingId==-1) {
+					break;
+				}
+				Topping topping = toppings.stream().filter(t->t.getTopID()==toppingId).findAny().get();
+				boolean isExtra = false;
+				System.out.println("Do you want add the same toping as extra too : type y/n:");
+		
+				isExtra = "y".equalsIgnoreCase(reader.readLine());
+				pizza.addToppings(topping, isExtra);
+
+				System.out.println("Do you want to add another topping : type y/n:");
+				if("y".equalsIgnoreCase(reader.readLine())) addMoreTopping = true;
+				else addMoreTopping = false;
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}	
+
+		}
+	}
 	
 	public static void viewCustomers()
 	{
 		/*
 		 * Simply print out all of the customers from the database. 
 		 */
-		
-		
-		
-		
-		
-		
+		try {
+			ArrayList<Customer> customers = DBNinja.getCustomerList();
+			customers.forEach(c -> System.out.println(c));
+		}
+		catch (Exception e) {
+			System.out.println("There is an error in displaying the cusotmers " + e);
+			e.printStackTrace();
+		}
 	}
 	
 
 	// Enter a new customer in the database
-	public static void EnterCustomer() throws SQLException, IOException 
+	public static Integer EnterCustomer() throws SQLException, IOException 
 	{
 		/*
 		 * Ask what the name of the customer is. YOU MUST TELL ME (the grader) HOW TO FORMAT THE FIRST NAME, LAST NAME, AND PHONE NUMBER.
@@ -143,9 +293,30 @@ public class Menu {
 		 * 
 		 * Once you get the name and phone number (and anything else your design might have) add it to the DB
 		 */
-		
-		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
+		System.out.println("Please Enter the customer name (First Name <Space> Last Name):");
+
+		String customerName = reader.readLine();
+		
+		String[] name = customerName.split(" ");
+		if (name.length<2)
+			throw new IllegalArgumentException("Please enter full name: " + customerName);
+		String firstName = name[0];
+		String lastName = name[1];
+		
+		System.out.println("What is this customer's phone number (XXX-XXX-XXXX) (No dash/space):");
+		
+		String phoneNumber = reader.readLine();
+		
+		Customer customer = new Customer(0, firstName, lastName, phoneNumber);
+		try {
+			return DBNinja.addCustomer(customer);
+		}
+		catch (SQLException | IOException e) {
+			System.out.println("There is an error while adding the customer " + e);
+			throw e;
+		}
 	}
 
 	// View any orders that are not marked as completed
@@ -159,7 +330,32 @@ public class Menu {
 	 * When I enter the order, print out all the information about that order, not just the simplified view.
 	 * 
 	 */
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+			
+		System.out.println("Would you like to:\n(a) display all orders\n(b) display orders since a specific date");
 		
+		String selectedOption = reader.readLine();
+		try {
+			ArrayList<Order> orders = new ArrayList<>();
+			if ("a".equals(selectedOption)) {
+				orders = DBNinja.getCurrentOrders();
+			} else {
+				System.out.println("What is the date you want to restrict by? (FORMAT= YYYY-MM-DD)");
+				String date = reader.readLine();
+				orders = DBNinja.getCurrentOrders(date);
+			}
+			
+			orders.forEach(c -> System.out.println(c.toSimplePrint()));
+			System.out.println("Which order would you like to see in detail? Enter the number:");
+			Integer orderId = Integer.parseInt(reader.readLine());
+			Order order = orders.stream().filter(o -> o.getOrderID()==orderId)
+            		.findFirst().orElse(null);
+			System.out.println(order.toString());
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	
@@ -172,26 +368,33 @@ public class Menu {
 		 * and allow the user to choose which of the incomplete orders they wish to mark as complete
 		 * 
 		 */
+		ArrayList<Order> orders = DBNinja.getCurrentOrders();
+		for (Order order : orders) {
+			System.out.println(order.toSimplePrint());
+		}
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		
 		
-		
-		
-		
-		
-
+		System.out.println("Enter the order Id you wish to mark as completed :");
+		Integer orderId = Integer.parseInt(reader.readLine());
+		DBNinja.CompleteOrder(orders.stream().filter(o->o.getOrderID()==orderId).findFirst().get());
 	}
 
 	// See the list of inventory and it's current level
-	public static void ViewInventoryLevels() throws SQLException, IOException 
+	public static ArrayList<Topping> ViewInventoryLevels() throws SQLException, IOException 
 	{
 		//print the inventory. I am really just concerned with the ID, the name, and the current inventory
-		
-		
-		
-		
-		
-		
-		
+		ArrayList<Topping> toppings = DBNinja.getInventory();		
+		try {
+			System.out.printf("%-9s %-25s %9s%n", "ID", "Name", "CurINVT");
+			toppings.forEach(topping -> System.out.printf("%-9s %-25s %9s%n", topping.getTopID(), topping.getTopName(),
+						topping.getCurINVT()));
+				
+		} catch (Exception e) {
+			System.out.println("There is an error while viewing Inventory levels " + e);
+			throw e;
+		}
+		return toppings;
 	}
 
 	// Select an inventory item and add more to the inventory level to re-stock the
@@ -202,15 +405,25 @@ public class Menu {
 		 * This should print the current inventory and then ask the user which topping they want to add more to and how much to add
 		 */
 		
-		
-		
-		
-		
-		
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		try {
+			ViewInventoryLevels();
+			System.out.println("Which topping do you want to add inventory to? Enter the number:");
+			Integer toppingId = Integer.parseInt(reader.readLine());
+	
+			System.out.println("How many units would you like to add?");
+			
+			Double amountToAdd = Double.parseDouble(reader.readLine());
+			ArrayList<Topping> toppings = DBNinja.getInventory();
+			Topping topping = toppings.stream().filter(t->t.getTopID()==toppingId).findFirst().orElse(null);
+			DBNinja.AddToInventory(topping, amountToAdd);
+		} catch (Exception e) {
+			throw e;
+		}
 	}
 
 	// A function that builds a pizza. Used in our add new order function
-	public static Pizza buildPizza(int orderID) throws SQLException, IOException 
+	public static Pizza buildPizza() throws SQLException, IOException
 	{
 		
 		/*
@@ -227,15 +440,24 @@ public class Menu {
 		 * Once the discounts are added, we can return the pizza
 		 */
 		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-		Pizza ret = null;
-		
-		
-		
-		
-		
-		
-		
-		return ret;
+
+		System.out.println("What size is the pizza? \n1.) Small\n2.) Medium\n3.) Large\n4.) X-Large \nEnter the corresponding number:");
+		Integer pizzaSizeMenuid = Integer.parseInt(reader.readLine());
+		String pizzaSize = MenuHelper.getPizzaSize(pizzaSizeMenuid);
+
+		System.out.println("What crust for this pizza : \n1.) Thin\n2.) Original\n3.) Pan\n4.) Gluten-Free \nEnter the corresponding number:");
+		Integer pizzaCrustMenuid = Integer.parseInt(reader.readLine());
+		String pizzaCrust = MenuHelper.getPizzaCrust(pizzaCrustMenuid);
+
+		String pizzaTimeStamp = MenuHelper.getCurrentTime();
+		double pizzaCustPrice = DBNinja.getBaseCustPrice(pizzaSize, pizzaCrust);
+		double pizzaBusPrice = DBNinja.getBaseBusPrice(pizzaSize, pizzaCrust);
+		Pizza pizza = new Pizza(0, pizzaSize, pizzaCrust, 0, "PREPARING", pizzaTimeStamp, pizzaCustPrice, pizzaBusPrice);
+
+		helperToppings(pizza);
+		helperPizzaDiscount(pizza);
+		//System.out.println(pizza.toString());
+		return pizza;
 	}
 	
 	private static int getTopIndexFromList(int TopID, ArrayList<Topping> tops)
@@ -255,11 +477,25 @@ public class Menu {
 	
 	public static void PrintReports() throws SQLException, NumberFormatException, IOException
 	{
+		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 		/*
 		 * This function calls the DBNinja functions to print the three reports.
 		 * 
 		 * You should ask the user which report to print
 		 */
+		System.out.println("Which report do you wish to print? Enter\n1.) ToppingPopularity\n2.) ProfitByPizza\n3.) ProfitByOrderType");
+
+		switch(Integer.parseInt(reader.readLine())) {
+			case 1:
+				DBNinja.printToppingPopReport();
+				break;
+			case 2:
+				DBNinja.printProfitByPizzaReport();
+				break;
+			case 3:
+				DBNinja.printProfitByOrderType();
+				break;
+		}
 	}
 
 }

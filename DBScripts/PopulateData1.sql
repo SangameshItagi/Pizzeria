@@ -54,6 +54,7 @@ VALUES
 ('Calvin Sanders','864-232-8944'),
 ('Lance Benton','864-878-5679.');
 
+/*
 INSERT INTO `order`(OrderCost,OrderType,OrderTime,OrderPrice,CustomerId)
 VALUES
 (3.68,'dinein','2022-03-05 12:03:00',13.5,NULL),
@@ -166,3 +167,4 @@ INSERT INTO pickup(OrderId)
 VALUES
 (3),
 (5);
+*/

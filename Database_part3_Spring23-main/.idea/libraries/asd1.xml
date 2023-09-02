@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="asd1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/cpsc4620/asd.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
